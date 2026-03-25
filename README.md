@@ -78,15 +78,16 @@ The page now reads `?cohort=`, `?msp=`, `?headless=`, `?package=`, `?hasConversi
 - The office-hours layout only appears when `?cohort=growth` is explicitly present in the URL; it is not restored from the saved `tw_cohort` cookie on later visits
 - `msp=custom` takes precedence over cohort routing and swaps the Americas, EMEA, APAC, and worldwide links to the custom-team booking routers
 
-## Growth Office Hours Source
-- The growth office-hours cards are now rendered from a shared Google Sheet, not hardcoded in `index.html`
-- `booking-page-links.js` -> `growthExperience.officeHoursSheet` stores the current sheet ID, tab name, and shared sheet URL
-- `netlify/functions/office-hours-config.js` reads the Google Sheet CSV and returns normalized session JSON to the page
-- The page keeps the current default Tuesday, Wednesday, and Thursday sessions in `booking-page-links.js` as a fallback if the sheet cannot be reached
-- The expected Google Sheet columns are `enabled`, `day`, `start_time_et`, `end_time_et`, and `zoom_url`
+## Shared Google Sheet Source
+- The growth office-hours cards and the sheet-driven booking/resource URLs now come from one shared Google Sheet
+- `booking-page-links.js` -> `growthExperience.sharedSheet` stores the current sheet ID, the shared sheet URL, and the tab names used by the page
+- `netlify/functions/booking-page-config.js` reads the Google Sheet CSV tabs and returns normalized JSON to the page
+- The current tabs are `OfficeHours`, `BookingLinks`, `ConfigurationLinks`, `ActivationLinks`, and `AddonLinks`
+- The page still keeps the current in-repo booking links, resource URLs, add-on URLs, and Tuesday/Wednesday/Thursday office-hours sessions as fallback defaults if the sheet cannot be reached
+- The `OfficeHours` tab expects `enabled`, `day`, `start_time_et`, `end_time_et`, and `zoom_url`
 - `enabled=TRUE` shows a session, and `enabled=FALSE` hides it
 - `day` can be any weekday name, so the team can move a session to Friday or another day without editing code
-- The shared Google Sheet must stay viewable to the deployed site; if it stops loading, the page falls back to the built-in default sessions
+- The shared Google Sheet must stay viewable to the deployed site; if it stops loading, the page falls back to the built-in defaults
 
 ## MSP-Aware Resource Links
 The page also reads `?msp=`, `?headless=`, `?package=`, `?hasConversion=`, and `?hasRetention=` from the URL and swaps the onboarding resource cards accordingly.

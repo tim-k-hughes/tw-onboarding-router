@@ -193,11 +193,17 @@ window.BOOKING_PAGE_LINKS = {
 
   // Session buttons shown when `?cohort=growth` is active.
   growthExperience: {
-    officeHoursSheet: {
-      functionPath: "/.netlify/functions/office-hours-config",
+    sharedSheet: {
+      functionPath: "/.netlify/functions/booking-page-config",
       sheetId: "1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM",
-      sheetName: "OfficeHours",
-      sheetUrl: "https://docs.google.com/spreadsheets/d/1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM/edit?usp=sharing"
+      sheetUrl: "https://docs.google.com/spreadsheets/d/1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM/edit?usp=sharing",
+      tabs: {
+        officeHours: "OfficeHours",
+        bookingLinks: "BookingLinks",
+        configurationLinks: "ConfigurationLinks",
+        activationLinks: "ActivationLinks",
+        addonLinks: "AddonLinks"
+      }
     },
     officeHoursTuesday: {
       label: "Tuesday - 3-4 PM ET",
