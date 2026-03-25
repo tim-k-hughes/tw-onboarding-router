@@ -341,17 +341,187 @@
       line-height: 1.55;
     }
 
-    .growth-card {
-      grid-column: 1 / -1;
-      min-height: 0;
-    }
-
-    .growth-card p {
-      max-width: 620px;
-    }
-
     [hidden] {
       display: none !important;
+    }
+
+    .office-hours-panel {
+      grid-column: 1 / -1;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 30px rgba(10, 10, 10, 0.06);
+      background:
+        radial-gradient(420px 180px at 100% 0%, rgba(12, 112, 242, 0.08), transparent 62%),
+        linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+      color: var(--ink);
+      animation: reveal 540ms ease both;
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .office-hours-hero {
+      display: grid;
+      gap: 8px;
+    }
+
+    .office-hours-intro {
+      display: grid;
+      gap: 10px;
+    }
+
+    .office-hours-header {
+      display: grid;
+      gap: 6px;
+    }
+
+    .office-hours-eyebrow {
+      margin: 0;
+      color: var(--charcoal);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: none;
+    }
+
+    .office-hours-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(22px, 2.6vw, 28px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .office-hours-note {
+      margin: 0;
+      padding-top: 2px;
+      color: var(--mid-gray);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .office-hours-note strong {
+      color: var(--ink);
+    }
+
+    .office-hours-note a {
+      color: var(--brand-blue);
+      font-weight: 700;
+      text-underline-offset: 2px;
+    }
+
+    .office-hours-note a:hover,
+    .office-hours-note a:focus {
+      color: var(--brand-blue-hover);
+    }
+
+    html[data-theme="dark"] .office-hours-panel {
+      box-shadow: 0 18px 34px rgba(1, 8, 30, 0.34);
+    }
+
+    html[data-theme="dark"] .office-hours-note {
+      color: var(--mid-gray);
+    }
+
+    html[data-theme="dark"] .office-hours-session-card {
+      border-color: var(--line);
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      box-shadow: 0 12px 22px rgba(1, 8, 30, 0.26);
+    }
+
+    html[data-theme="dark"] .office-hours-session-card.is-next-up {
+      border-color: var(--recommend-border);
+      box-shadow: 0 0 0 3px var(--recommend-ring), 0 14px 26px rgba(62, 130, 246, 0.18);
+    }
+
+    .office-hours-schedule {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .office-hours-session-card {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      position: relative;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--white);
+      box-shadow: 0 10px 20px rgba(10, 10, 10, 0.04);
+    }
+
+    .office-hours-session-card.is-next-up {
+      border-color: var(--recommend-border);
+      box-shadow: 0 0 0 3px var(--recommend-ring), 0 12px 24px rgba(12, 112, 242, 0.12);
+    }
+
+    .office-hours-session-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .office-hours-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .office-hours-session-day {
+      margin: 0;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+
+    .office-hours-session-time {
+      margin: 0;
+      color: var(--tag-text);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .office-hours-session {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      text-decoration: none;
+      text-align: center;
+      color: var(--white);
+      background: var(--brand-blue);
+      border: 1px solid var(--brand-blue);
+      box-shadow: 0 10px 18px rgba(12, 112, 242, 0.16);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    .office-hours-session:hover,
+    .office-hours-session:focus {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 28px rgba(12, 112, 242, 0.24);
+      background: var(--brand-blue-hover);
+      border-color: var(--brand-blue-hover);
     }
 
     .tag {
@@ -1007,6 +1177,25 @@
       .coverage {
         align-items: flex-start;
       }
+
+      .office-hours-hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .office-hours-panel {
+        padding: 22px;
+        gap: 18px;
+      }
+
+      .office-hours-eyebrow,
+      .office-hours-note,
+      .office-hours-session-time {
+        font-size: 14px;
+      }
+
+      .office-hours-schedule {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
   </style>
 </head>
@@ -1047,7 +1236,7 @@
         <p class="lead" data-brand-lead-copy>Let's get your kickoff call booked so onboarding can get started.</p>
       </header>
 
-      <div class="regions">
+      <div class="regions" data-regions>
         <article class="region-card" data-geo="americas">
           <div class="tag">North + South America</div>
           <h2>Americas</h2>
@@ -1078,14 +1267,6 @@
           </a>
         </article>
 
-        <article class="region-card growth-card" data-growth-office-hours hidden>
-          <div class="tag">Growth cohort</div>
-          <h2>Join CS Growth office hours</h2>
-          <p>Click on this button to join our office hours.</p>
-          <a class="cta" href="https://example.com/office-hours" data-link="officeHours" aria-label="Join office hours">
-            <span>Join office hours</span>
-          </a>
-        </article>
       </div>
 
       <div class="info-grid">
@@ -1127,6 +1308,44 @@
           </div>
         </article>
       </div>
+
+      <section class="office-hours-panel" data-growth-office-hours hidden aria-label="Customer Success Office Hours">
+        <div class="office-hours-hero">
+          <div class="office-hours-intro">
+            <div class="office-hours-header">
+              <h2 class="office-hours-title">Need help? Join office hours.</h2>
+              <p class="office-hours-eyebrow">Start with Configuration and Activation above, then join any live session below. Each button opens that session's Zoom room in a new tab so you can ask questions and get guidance from the CS team in real time.</p>
+            </div>
+          </div>
+        </div>
+        <div class="office-hours-schedule">
+          <article class="office-hours-session-card" data-office-hours-session data-office-hours-day="2" data-office-hours-start-minutes="900">
+            <div class="office-hours-session-copy">
+              <span class="office-hours-badge" data-office-hours-badge hidden>Next up</span>
+              <h3 class="office-hours-session-day">Tuesday</h3>
+              <p class="office-hours-session-time" data-office-hours-time="3-4 PM">3-4 PM ET</p>
+            </div>
+            <a class="office-hours-session" href="https://triplewhale.zoom.us/j/84126057531" data-link="officeHoursTuesday" aria-label="Join Tuesday office hours Zoom room">Join Zoom room</a>
+          </article>
+          <article class="office-hours-session-card" data-office-hours-session data-office-hours-day="3" data-office-hours-start-minutes="1020">
+            <div class="office-hours-session-copy">
+              <span class="office-hours-badge" data-office-hours-badge hidden>Next up</span>
+              <h3 class="office-hours-session-day">Wednesday</h3>
+              <p class="office-hours-session-time" data-office-hours-time="5-6 PM">5-6 PM ET</p>
+            </div>
+            <a class="office-hours-session" href="https://triplewhale.zoom.us/j/84126057531" data-link="officeHoursWednesday" aria-label="Join Wednesday office hours Zoom room">Join Zoom room</a>
+          </article>
+          <article class="office-hours-session-card" data-office-hours-session data-office-hours-day="4" data-office-hours-start-minutes="600">
+            <div class="office-hours-session-copy">
+              <span class="office-hours-badge" data-office-hours-badge hidden>Next up</span>
+              <h3 class="office-hours-session-day">Thursday</h3>
+              <p class="office-hours-session-time" data-office-hours-time="10-11 AM">10-11 AM ET</p>
+            </div>
+            <a class="office-hours-session" href="https://triplewhale.zoom.us/j/84126057531" data-link="officeHoursThursday" aria-label="Join Thursday office hours Zoom room">Join Zoom room</a>
+          </article>
+        </div>
+        <p class="office-hours-note">Technical troubleshooting is not handled in office hours. Contact <a href="mailto:support@triplewhale.com">support@triplewhale.com</a> instead.</p>
+      </section>
 
       <section class="coverage" aria-label="Worldwide booking availability" data-worldwide-coverage>
         <p class="coverage-copy">
@@ -1442,8 +1661,21 @@
         var queryCohort = normalizeCohortValue(rawCohort);
         var cookieCohort = normalizeCohortValue(getCookieValue(cohortCookieName));
 
+        function isPersistedRoutingCohort(value) {
+          return value === "smb" || value === "mm" || value === "ent";
+        }
+
+        if (cookieCohort && !isPersistedRoutingCohort(cookieCohort)) {
+          deleteCookieValue(cohortCookieName);
+          cookieCohort = null;
+        }
+
         if (queryCohort) {
-          setCookieValue(cohortCookieName, rawCohort);
+          if (isPersistedRoutingCohort(queryCohort)) {
+            setCookieValue(cohortCookieName, rawCohort);
+          } else {
+            deleteCookieValue(cohortCookieName);
+          }
           return queryCohort;
         }
 
@@ -1453,7 +1685,7 @@
       var activeCohort = getActiveCohort();
 
       function isGrowthOfficeHoursMode() {
-        return activeCohort === "growth";
+        return normalizeCohortValue(getQueryParamValue(bookingRouting.cohortQueryParam || "cohort")) === "growth";
       }
 
       function getActiveHeadless() {
@@ -1545,10 +1777,14 @@
       }
 
       function getHeroBrandContext(brandName) {
-        return brandName ? "Quickstart resources for " + brandName : "";
+        return brandName ? "Quickstart guide for " + brandName : "";
       }
 
       function getHeroLeadCopy() {
+        if (isGrowthOfficeHoursMode()) {
+          return "This is the quickstart guide from your welcome email. Start with Configuration and Activation below, then join office hours if you need help along the way.";
+        }
+
         return "Let's get your kickoff call booked so onboarding can get started.";
       }
 
@@ -1632,6 +1868,25 @@
         return entry.url || null;
       }
 
+      function setAnchorToOpenInNewTab(anchor) {
+        if (!anchor) {
+          return;
+        }
+
+        anchor.setAttribute("target", "_blank");
+        anchor.setAttribute("rel", "noopener noreferrer");
+      }
+
+      function applyNewTabBehavior(rootEl) {
+        var rootElToUse = rootEl || document;
+
+        if (!rootElToUse || typeof rootElToUse.querySelectorAll !== "function") {
+          return;
+        }
+
+        rootElToUse.querySelectorAll("a[href]").forEach(setAnchorToOpenInNewTab);
+      }
+
       function addBookingLinksFromGroup(group) {
         if (!group || typeof group !== "object") {
           return;
@@ -1657,6 +1912,8 @@
         if (bookingLinks[key]) {
           el.href = bookingLinks[key];
         }
+
+        setAnchorToOpenInNewTab(el);
       });
 
       function normalizeGeoRecommendation(value) {
@@ -1679,6 +1936,10 @@
       function applyGrowthOfficeHoursMode() {
         var isGrowthMode = isGrowthOfficeHoursMode();
 
+        document.querySelectorAll("[data-regions]").forEach(function (section) {
+          section.hidden = isGrowthMode;
+        });
+
         document.querySelectorAll(".region-card[data-geo]").forEach(function (card) {
           card.hidden = isGrowthMode;
         });
@@ -1689,6 +1950,10 @@
 
         document.querySelectorAll("[data-worldwide-coverage]").forEach(function (section) {
           section.hidden = isGrowthMode;
+        });
+
+        document.querySelectorAll("[data-footer-copy]").forEach(function (footerEl) {
+          footerEl.hidden = isGrowthMode;
         });
       }
 
@@ -1796,6 +2061,125 @@
         return zoneConfig.fallback || null;
       }
 
+      function applyOfficeHoursTimezoneLabels() {
+        var easternLabel = resolveTimeZoneAbbreviation({
+          timeZone: "America/New_York",
+          fallback: "EST",
+          offsetLabels: {
+            "-300": "EST",
+            "-240": "EDT"
+          }
+        });
+
+        if (!easternLabel) {
+          return;
+        }
+
+        document.querySelectorAll("[data-office-hours-time]").forEach(function (timeEl) {
+          var timeRange = timeEl.getAttribute("data-office-hours-time");
+
+          if (!timeRange) {
+            return;
+          }
+
+          timeEl.textContent = timeRange + " " + easternLabel;
+        });
+      }
+
+      function getEasternCurrentSchedulePosition() {
+        if (typeof Intl === "undefined" || typeof Intl.DateTimeFormat !== "function") {
+          return null;
+        }
+
+        try {
+          var formatter = new Intl.DateTimeFormat("en-US", {
+            timeZone: "America/New_York",
+            weekday: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          });
+          var parts = formatter.formatToParts(new Date());
+          var weekdayPart = parts.find(function (part) { return part.type === "weekday"; });
+          var hourPart = parts.find(function (part) { return part.type === "hour"; });
+          var minutePart = parts.find(function (part) { return part.type === "minute"; });
+          var weekdayMap = {
+            Sun: 0,
+            Mon: 1,
+            Tue: 2,
+            Wed: 3,
+            Thu: 4,
+            Fri: 5,
+            Sat: 6
+          };
+          var weekday = weekdayPart && weekdayMap[weekdayPart.value];
+          var hour = hourPart ? parseInt(hourPart.value, 10) : NaN;
+          var minute = minutePart ? parseInt(minutePart.value, 10) : NaN;
+
+          if (typeof weekday !== "number" || isNaN(hour) || isNaN(minute)) {
+            return null;
+          }
+
+          return (weekday * 1440) + (hour * 60) + minute;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function applyOfficeHoursNextUpState() {
+        var currentSchedulePosition = getEasternCurrentSchedulePosition();
+        var sessionCards = Array.prototype.slice.call(document.querySelectorAll("[data-office-hours-session]"));
+        var totalWeekMinutes = 7 * 1440;
+        var nextCard = null;
+        var nextDistance = Infinity;
+
+        sessionCards.forEach(function (card) {
+          card.classList.remove("is-next-up");
+
+          var badge = card.querySelector("[data-office-hours-badge]");
+          if (badge) {
+            badge.hidden = true;
+          }
+        });
+
+        if (currentSchedulePosition === null || !sessionCards.length) {
+          return;
+        }
+
+        sessionCards.forEach(function (card) {
+          var dayValue = parseInt(card.getAttribute("data-office-hours-day"), 10);
+          var startMinutesValue = parseInt(card.getAttribute("data-office-hours-start-minutes"), 10);
+
+          if (isNaN(dayValue) || isNaN(startMinutesValue)) {
+            return;
+          }
+
+          var sessionPosition = (dayValue * 1440) + startMinutesValue;
+          var distance = sessionPosition - currentSchedulePosition;
+
+          if (distance < 0) {
+            distance += totalWeekMinutes;
+          }
+
+          if (distance < nextDistance) {
+            nextDistance = distance;
+            nextCard = card;
+          }
+        });
+
+        if (!nextCard) {
+          return;
+        }
+
+        nextCard.classList.add("is-next-up");
+
+        var nextBadge = nextCard.querySelector("[data-office-hours-badge]");
+        if (nextBadge) {
+          nextBadge.hidden = false;
+          nextBadge.textContent = "Next up";
+        }
+      }
+
       function applyTimezoneLabels() {
         if (typeof Intl === "undefined" || typeof Intl.DateTimeFormat !== "function") {
           return;
@@ -1850,6 +2234,8 @@
       }
 
       applyTimezoneLabels();
+      applyOfficeHoursTimezoneLabels();
+      applyOfficeHoursNextUpState();
       applyBrandCopy();
       applyActiveMspContext();
       applyActiveBookingContext();
@@ -2017,6 +2403,7 @@
           var anchor = document.createElement("a");
           anchor.href = item.url;
           anchor.textContent = item.label;
+          setAnchorToOpenInNewTab(anchor);
           parent.appendChild(anchor);
           return;
         }
@@ -2161,6 +2548,8 @@
           addonListEl.appendChild(li);
         });
       });
+
+      applyNewTabBehavior(document);
 
       function formatPackageDisplayName(packageKey) {
         var labels = {
@@ -2330,7 +2719,7 @@
           },
           getImpact: function (value) {
             if (value === "growth") {
-              return "The Americas, EMEA, and APAC cards are hidden, the worldwide availability section is hidden, and the page shows a single Join CS Growth office hours card instead.";
+              return "The Americas, EMEA, and APAC cards are hidden, the worldwide availability section is hidden, and the page shows the Customer Success Office Hours schedule instead.";
             }
 
             return value
@@ -2352,11 +2741,11 @@
             },
             {
               value: "growth",
-              effect: "Hides the Americas, EMEA, APAC, and worldwide sections and shows a single Join CS Growth office hours card."
+              effect: "Hides the Americas, EMEA, APAC, and worldwide sections and shows the Customer Success Office Hours schedule."
             }
           ],
           invalidNote: "Use smb, mm, ent, or growth. Anything else is ignored.",
-          priorityNote: "Order used: platform-specific booking overrides first, then URL cohort, then the saved cohort cookie. SMB, MM, and ENT swap booking routers. Growth changes the page to the office-hours layout. If none are set, the page keeps the default shared booking routers."
+          priorityNote: "Order used: platform-specific booking overrides first, then URL cohort, then the saved routing cohort cookie. SMB, MM, and ENT swap booking routers. Growth changes the page to the office-hours layout only when growth is explicitly present in the URL and is not reused from a saved cookie. If none are set, the page keeps the default shared booking routers."
         },
         {
           key: "geo",
@@ -2377,7 +2766,7 @@
           },
           getImpact: function (value) {
             if (value && isGrowthOfficeHoursMode()) {
-              return "A recommended region is saved, but the growth cohort replaces the regional cards with the Join office hours card so that highlight is not shown.";
+              return "A recommended region is saved, but the growth cohort replaces the regional cards with the office-hours schedule so that highlight is not shown.";
             }
 
             return value

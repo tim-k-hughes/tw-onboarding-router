@@ -123,7 +123,7 @@ function getProfessionalActivationItems() {
 window.BOOKING_PAGE_LINKS = {
   // Booking link routing.
   // The page accepts `?cohort=` and swaps regional booking URLs when supported.
-  // `?cohort=growth` switches the page into a single office-hours CTA layout.
+  // `?cohort=growth` switches the page into the office-hours quickstart layout.
   // `?msp=custom` can also override those booking URLs with custom-team routers.
   bookingRouting: {
     cohortQueryParam: "cohort"
@@ -191,12 +191,22 @@ window.BOOKING_PAGE_LINKS = {
     }
   },
 
-  // Dedicated CTA shown when `?cohort=growth` is active.
+  // Session buttons shown when `?cohort=growth` is active.
   growthExperience: {
-    officeHours: {
-      label: "Join office hours",
-      dataLinkKey: "officeHours",
-      url: "https://example.com/office-hours"
+    officeHoursTuesday: {
+      label: "Tuesday - 3-4 PM ET",
+      dataLinkKey: "officeHoursTuesday",
+      url: "https://triplewhale.zoom.us/j/84126057531"
+    },
+    officeHoursWednesday: {
+      label: "Wednesday - 5-6 PM ET",
+      dataLinkKey: "officeHoursWednesday",
+      url: "https://triplewhale.zoom.us/j/84126057531"
+    },
+    officeHoursThursday: {
+      label: "Thursday - 10-11 AM ET",
+      dataLinkKey: "officeHoursThursday",
+      url: "https://triplewhale.zoom.us/j/84126057531"
     }
   },
 

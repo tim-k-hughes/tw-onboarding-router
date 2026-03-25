@@ -74,7 +74,8 @@ The page now reads `?cohort=`, `?msp=`, `?headless=`, `?package=`, `?hasConversi
 - A valid `?cohort=` value updates the `tw_cohort` cookie
 - Blank or invalid `?cohort=` values do not overwrite the cookie
 - `booking-page-links.js` stores the default regional URLs plus cohort-specific overrides under each booking button and the worldwide link
-- `?cohort=growth` hides the Americas, EMEA, APAC, and worldwide sections and replaces them with a single “Join office hours” CTA using `booking-page-links.js` -> `growthExperience.officeHours`
+- `?cohort=growth` hides the Americas, EMEA, APAC, and worldwide sections and replaces them with the Customer Success Office Hours schedule using `booking-page-links.js` -> `growthExperience`
+- The office-hours layout only appears when `?cohort=growth` is explicitly present in the URL; it is not restored from the saved `tw_cohort` cookie on later visits
 - `msp=custom` takes precedence over cohort routing and swaps the Americas, EMEA, APAC, and worldwide links to the custom-team booking routers
 
 ## MSP-Aware Resource Links
