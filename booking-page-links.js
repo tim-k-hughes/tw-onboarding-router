@@ -193,18 +193,36 @@ window.BOOKING_PAGE_LINKS = {
 
   // Session buttons shown when `?cohort=growth` is active.
   growthExperience: {
+    officeHoursSheet: {
+      functionPath: "/.netlify/functions/office-hours-config",
+      sheetId: "1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM",
+      sheetName: "OfficeHours",
+      sheetUrl: "https://docs.google.com/spreadsheets/d/1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM/edit?usp=sharing"
+    },
     officeHoursTuesday: {
       label: "Tuesday - 3-4 PM ET",
+      day: "Tuesday",
+      dayIndex: 2,
+      startTimeEt: "3:00 PM",
+      endTimeEt: "4:00 PM",
       dataLinkKey: "officeHoursTuesday",
       url: "https://triplewhale.zoom.us/j/84126057531"
     },
     officeHoursWednesday: {
       label: "Wednesday - 5-6 PM ET",
+      day: "Wednesday",
+      dayIndex: 3,
+      startTimeEt: "5:00 PM",
+      endTimeEt: "6:00 PM",
       dataLinkKey: "officeHoursWednesday",
       url: "https://triplewhale.zoom.us/j/84126057531"
     },
     officeHoursThursday: {
       label: "Thursday - 10-11 AM ET",
+      day: "Thursday",
+      dayIndex: 4,
+      startTimeEt: "10:00 AM",
+      endTimeEt: "11:00 AM",
       dataLinkKey: "officeHoursThursday",
       url: "https://triplewhale.zoom.us/j/84126057531"
     }
