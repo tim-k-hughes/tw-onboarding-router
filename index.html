@@ -341,6 +341,19 @@
       line-height: 1.55;
     }
 
+    .growth-card {
+      grid-column: 1 / -1;
+      min-height: 0;
+    }
+
+    .growth-card p {
+      max-width: 620px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
     .tag {
       align-self: flex-start;
       background: var(--tag-bg);
@@ -1064,6 +1077,15 @@
             <span>Book APAC</span>
           </a>
         </article>
+
+        <article class="region-card growth-card" data-growth-office-hours hidden>
+          <div class="tag">Growth cohort</div>
+          <h2>Join CS Growth office hours</h2>
+          <p>Click on this button to join our office hours.</p>
+          <a class="cta" href="https://example.com/office-hours" data-link="officeHours" aria-label="Join office hours">
+            <span>Join office hours</span>
+          </a>
+        </article>
       </div>
 
       <div class="info-grid">
@@ -1106,14 +1128,14 @@
         </article>
       </div>
 
-      <section class="coverage" aria-label="Worldwide booking availability">
+      <section class="coverage" aria-label="Worldwide booking availability" data-worldwide-coverage>
         <p class="coverage-copy">
           If the regional options above do not have a time in your working hours, use worldwide availability to book outside your timezone with the full team.
         </p>
         <a href="https://example.com/worldwide" data-link="worldwide">View worldwide availability</a>
       </section>
 
-      <div class="footer">If you are unsure, start with the region closest to your business hours.</div>
+      <div class="footer" data-footer-copy>If you are unsure, start with the region closest to your business hours.</div>
       </section>
 
       <aside class="debug-panel" data-debug-panel hidden>
@@ -1220,7 +1242,8 @@
         var validCohortValues = {
           smb: "smb",
           mm: "mm",
-          ent: "ent"
+          ent: "ent",
+          growth: "growth"
         };
 
         return validCohortValues[normalizedValue] || null;
@@ -1429,6 +1452,10 @@
 
       var activeCohort = getActiveCohort();
 
+      function isGrowthOfficeHoursMode() {
+        return activeCohort === "growth";
+      }
+
       function getActiveHeadless() {
         var rawHeadless = getQueryParamValue(resourceRouting.headlessQueryParam || "headless");
         var queryHeadless = normalizeHeadlessValue(rawHeadless);
@@ -1623,6 +1650,7 @@
 
       addBookingLinksFromGroup(linkConfig.bookingButtons);
       addBookingLinksFromGroup(linkConfig.additionalCoverageLink);
+      addBookingLinksFromGroup(linkConfig.growthExperience);
 
       document.querySelectorAll("[data-link]").forEach(function (el) {
         var key = el.getAttribute("data-link");
@@ -1648,6 +1676,22 @@
 
       var activeRecommendedGeo = null;
 
+      function applyGrowthOfficeHoursMode() {
+        var isGrowthMode = isGrowthOfficeHoursMode();
+
+        document.querySelectorAll(".region-card[data-geo]").forEach(function (card) {
+          card.hidden = isGrowthMode;
+        });
+
+        document.querySelectorAll("[data-growth-office-hours]").forEach(function (card) {
+          card.hidden = !isGrowthMode;
+        });
+
+        document.querySelectorAll("[data-worldwide-coverage]").forEach(function (section) {
+          section.hidden = isGrowthMode;
+        });
+      }
+
       function applyGeoRecommendation() {
         var rawQueryGeo = getQueryParamValue("geo");
         var queryGeo = normalizeGeoRecommendation(rawQueryGeo);
@@ -1663,6 +1707,10 @@
         }
 
         activeRecommendedGeo = recommendedGeo;
+
+        if (isGrowthOfficeHoursMode()) {
+          return;
+        }
 
         var recommendedCard = document.querySelector('.region-card[data-geo="' + recommendedGeo + '"]');
 
@@ -1805,6 +1853,7 @@
       applyBrandCopy();
       applyActiveMspContext();
       applyActiveBookingContext();
+      applyGrowthOfficeHoursMode();
 
       function getItemsForMsp(itemsByMsp, mspKey) {
         if (!itemsByMsp || typeof itemsByMsp !== "object") {
@@ -2127,7 +2176,8 @@
         var labels = {
           smb: "SMB",
           mm: "MM",
-          ent: "ENT"
+          ent: "ENT",
+          growth: "Growth"
         };
 
         return labels[cohortKey] || "Default shared routing";
@@ -2258,7 +2308,7 @@
         },
         {
           key: "cohort",
-          title: "MRR cohort",
+          title: "MRR cohort / booking mode",
           queryParam: bookingRouting.cohortQueryParam || "cohort",
           displayParam: bookingRouting.cohortQueryParam || "cohort",
           cookieName: cohortCookieName,
@@ -2279,6 +2329,10 @@
             return value ? formatCohortDisplayName(value) : "Default shared routing";
           },
           getImpact: function (value) {
+            if (value === "growth") {
+              return "The Americas, EMEA, and APAC cards are hidden, the worldwide availability section is hidden, and the page shows a single Join CS Growth office hours card instead.";
+            }
+
             return value
               ? "The Americas, EMEA, APAC, and worldwide booking buttons route to the " + formatCohortDisplayName(value) + " team routers unless a platform-specific booking override is active."
               : "The booking buttons stay on the default shared routers.";
@@ -2295,10 +2349,14 @@
             {
               value: "ent",
               effect: "Routes the Americas, EMEA, APAC, and worldwide booking links to the ENT team routers."
+            },
+            {
+              value: "growth",
+              effect: "Hides the Americas, EMEA, APAC, and worldwide sections and shows a single Join CS Growth office hours card."
             }
           ],
-          invalidNote: "Use smb, mm, or ent. Anything else is ignored.",
-          priorityNote: "Order used: platform-specific booking overrides first, then URL cohort, then the saved cohort cookie. If none are set, the page keeps the default shared booking routers."
+          invalidNote: "Use smb, mm, ent, or growth. Anything else is ignored.",
+          priorityNote: "Order used: platform-specific booking overrides first, then URL cohort, then the saved cohort cookie. SMB, MM, and ENT swap booking routers. Growth changes the page to the office-hours layout. If none are set, the page keeps the default shared booking routers."
         },
         {
           key: "geo",
@@ -2318,6 +2376,10 @@
             return value ? formatGeoDisplayName(value) : "None";
           },
           getImpact: function (value) {
+            if (value && isGrowthOfficeHoursMode()) {
+              return "A recommended region is saved, but the growth cohort replaces the regional cards with the Join office hours card so that highlight is not shown.";
+            }
+
             return value
               ? "The " + formatGeoDisplayName(value) + " card is highlighted with the Recommended label."
               : "No region card is highlighted as recommended right now.";

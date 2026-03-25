@@ -123,6 +123,7 @@ function getProfessionalActivationItems() {
 window.BOOKING_PAGE_LINKS = {
   // Booking link routing.
   // The page accepts `?cohort=` and swaps regional booking URLs when supported.
+  // `?cohort=growth` switches the page into a single office-hours CTA layout.
   // `?msp=custom` can also override those booking URLs with custom-team routers.
   bookingRouting: {
     cohortQueryParam: "cohort"
@@ -187,6 +188,15 @@ window.BOOKING_PAGE_LINKS = {
         mm: "https://example.com/mm/worldwide",
         ent: "https://example.com/ent/worldwide"
       }
+    }
+  },
+
+  // Dedicated CTA shown when `?cohort=growth` is active.
+  growthExperience: {
+    officeHours: {
+      label: "Join office hours",
+      dataLinkKey: "officeHours",
+      url: "https://example.com/office-hours"
     }
   },
 
