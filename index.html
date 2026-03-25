@@ -399,6 +399,30 @@
       line-height: 1.55;
     }
 
+    .office-hours-empty {
+      margin: 0;
+      padding: 18px 20px;
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--line);
+      background: rgba(12, 112, 242, 0.03);
+      color: var(--mid-gray);
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .office-hours-empty a {
+      color: var(--brand-blue);
+      font-weight: 700;
+      text-underline-offset: 2px;
+    }
+
+    .office-hours-empty a:hover,
+    .office-hours-empty a:focus {
+      color: var(--brand-blue-hover);
+    }
+
     .office-hours-note strong {
       color: var(--ink);
     }
@@ -420,6 +444,26 @@
 
     html[data-theme="dark"] .office-hours-note {
       color: var(--mid-gray);
+    }
+
+    html[data-theme="dark"] .office-hours-empty {
+      border-color: var(--line);
+      background: rgba(12, 112, 242, 0.08);
+      color: var(--mid-gray);
+    }
+
+    .debug-note a,
+    .debug-help a {
+      color: var(--brand-blue);
+      font-weight: 700;
+      text-underline-offset: 2px;
+    }
+
+    .debug-note a:hover,
+    .debug-note a:focus,
+    .debug-help a:hover,
+    .debug-help a:focus {
+      color: var(--brand-blue-hover);
     }
 
     html[data-theme="dark"] .office-hours-session-card {
@@ -1318,32 +1362,7 @@
             </div>
           </div>
         </div>
-        <div class="office-hours-schedule">
-          <article class="office-hours-session-card" data-office-hours-session data-office-hours-day="2" data-office-hours-start-minutes="900">
-            <div class="office-hours-session-copy">
-              <span class="office-hours-badge" data-office-hours-badge hidden>Next up</span>
-              <h3 class="office-hours-session-day">Tuesday</h3>
-              <p class="office-hours-session-time" data-office-hours-time="3-4 PM">3-4 PM ET</p>
-            </div>
-            <a class="office-hours-session" href="https://triplewhale.zoom.us/j/84126057531" data-link="officeHoursTuesday" aria-label="Join Tuesday office hours Zoom room">Join Zoom room</a>
-          </article>
-          <article class="office-hours-session-card" data-office-hours-session data-office-hours-day="3" data-office-hours-start-minutes="1020">
-            <div class="office-hours-session-copy">
-              <span class="office-hours-badge" data-office-hours-badge hidden>Next up</span>
-              <h3 class="office-hours-session-day">Wednesday</h3>
-              <p class="office-hours-session-time" data-office-hours-time="5-6 PM">5-6 PM ET</p>
-            </div>
-            <a class="office-hours-session" href="https://triplewhale.zoom.us/j/84126057531" data-link="officeHoursWednesday" aria-label="Join Wednesday office hours Zoom room">Join Zoom room</a>
-          </article>
-          <article class="office-hours-session-card" data-office-hours-session data-office-hours-day="4" data-office-hours-start-minutes="600">
-            <div class="office-hours-session-copy">
-              <span class="office-hours-badge" data-office-hours-badge hidden>Next up</span>
-              <h3 class="office-hours-session-day">Thursday</h3>
-              <p class="office-hours-session-time" data-office-hours-time="10-11 AM">10-11 AM ET</p>
-            </div>
-            <a class="office-hours-session" href="https://triplewhale.zoom.us/j/84126057531" data-link="officeHoursThursday" aria-label="Join Thursday office hours Zoom room">Join Zoom room</a>
-          </article>
-        </div>
+        <div class="office-hours-schedule" data-office-hours-schedule></div>
         <p class="office-hours-note">Technical troubleshooting is not handled in office hours. Contact <a href="mailto:support@triplewhale.com">support@triplewhale.com</a> instead.</p>
       </section>
 
@@ -1362,6 +1381,7 @@
           <p class="debug-eyebrow">Debug View</p>
           <h2>Why this page looks the way it does</h2>
           <p class="debug-help">A cookie here just means a saved value from a past visit. The table shows the resolved value, how it was chosen, and the values you can actively use to change each setting. Default and fallback behavior is explained in the notes column. Hover a value to see what it does.</p>
+          <p class="debug-note" data-debug-office-hours-note hidden>Growth office hours are managed in the shared <a href="#" data-debug-office-hours-link>Google Sheet</a> for review.</p>
         </div>
 
         <section class="debug-section" data-debug-alerts hidden></section>
@@ -1389,6 +1409,8 @@
       var bookingRouting = linkConfig.bookingRouting || {};
       var resourceRouting = linkConfig.resourceRouting || {};
       var checklistSections = linkConfig.checklistSections || {};
+      var growthExperienceConfig = linkConfig.growthExperience || {};
+      var officeHoursSheetConfig = growthExperienceConfig.officeHoursSheet || {};
 
       function normalizeMspValue(value) {
         if (!value) {
@@ -1933,6 +1955,277 @@
 
       var activeRecommendedGeo = null;
 
+      function getOfficeHoursDayMeta(dayValue) {
+        if (!dayValue) {
+          return null;
+        }
+
+        var normalizedValue = String(dayValue).toLowerCase().trim();
+        var dayMap = {
+          sun: { label: "Sunday", index: 0 },
+          sunday: { label: "Sunday", index: 0 },
+          mon: { label: "Monday", index: 1 },
+          monday: { label: "Monday", index: 1 },
+          tue: { label: "Tuesday", index: 2 },
+          tues: { label: "Tuesday", index: 2 },
+          tuesday: { label: "Tuesday", index: 2 },
+          wed: { label: "Wednesday", index: 3 },
+          wednesday: { label: "Wednesday", index: 3 },
+          thu: { label: "Thursday", index: 4 },
+          thur: { label: "Thursday", index: 4 },
+          thurs: { label: "Thursday", index: 4 },
+          thursday: { label: "Thursday", index: 4 },
+          fri: { label: "Friday", index: 5 },
+          friday: { label: "Friday", index: 5 },
+          sat: { label: "Saturday", index: 6 },
+          saturday: { label: "Saturday", index: 6 }
+        };
+
+        return dayMap[normalizedValue] || null;
+      }
+
+      function parseOfficeHoursClockTime(value) {
+        if (!value) {
+          return null;
+        }
+
+        var normalizedValue = String(value)
+          .trim()
+          .replace(/\./g, "")
+          .replace(/\s+/g, " ")
+          .toUpperCase();
+        var match = normalizedValue.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
+
+        if (!match) {
+          return null;
+        }
+
+        var hour = parseInt(match[1], 10);
+        var minute = parseInt(match[2] || "0", 10);
+        var meridiem = match[3];
+
+        if (isNaN(hour) || isNaN(minute) || hour < 1 || hour > 12 || minute < 0 || minute > 59) {
+          return null;
+        }
+
+        var normalizedHour = hour % 12;
+        if (meridiem === "PM") {
+          normalizedHour += 12;
+        }
+
+        return {
+          hour24: normalizedHour,
+          minute: minute,
+          label: (hour % 12 || 12) + ":" + String(minute).padStart(2, "0") + " " + meridiem,
+          totalMinutes: (normalizedHour * 60) + minute
+        };
+      }
+
+      function formatOfficeHoursTimePart(timeDetails, includeMeridiem) {
+        if (!timeDetails) {
+          return "";
+        }
+
+        var hour = timeDetails.hour24 % 12 || 12;
+        var minuteLabel = timeDetails.minute ? ":" + String(timeDetails.minute).padStart(2, "0") : "";
+        var meridiem = timeDetails.hour24 >= 12 ? "PM" : "AM";
+
+        return hour + minuteLabel + (includeMeridiem ? " " + meridiem : "");
+      }
+
+      function buildOfficeHoursTimeRange(startTime, endTime) {
+        if (!startTime || !endTime) {
+          return "";
+        }
+
+        var startMeridiem = startTime.hour24 >= 12 ? "PM" : "AM";
+        var endMeridiem = endTime.hour24 >= 12 ? "PM" : "AM";
+        var includeStartMeridiem = startMeridiem !== endMeridiem;
+
+        return formatOfficeHoursTimePart(startTime, includeStartMeridiem) + "-" + formatOfficeHoursTimePart(endTime, true);
+      }
+
+      function compareOfficeHoursSessions(firstSession, secondSession) {
+        if (firstSession.dayIndex !== secondSession.dayIndex) {
+          return firstSession.dayIndex - secondSession.dayIndex;
+        }
+
+        return firstSession.startMinutes - secondSession.startMinutes;
+      }
+
+      function normalizeOfficeHoursSession(entry) {
+        if (!entry || !(entry.url || entry.zoomUrl) || entry.enabled === false) {
+          return null;
+        }
+
+        var dayMeta = getOfficeHoursDayMeta(entry.day || entry.dayLabel);
+        var startTime = typeof entry.startMinutes === "number"
+          ? {
+            hour24: Math.floor(entry.startMinutes / 60),
+            minute: entry.startMinutes % 60,
+            totalMinutes: entry.startMinutes
+          }
+          : parseOfficeHoursClockTime(entry.startTimeEt);
+        var endTime = typeof entry.endMinutes === "number"
+          ? {
+            hour24: Math.floor(entry.endMinutes / 60),
+            minute: entry.endMinutes % 60,
+            totalMinutes: entry.endMinutes
+          }
+          : parseOfficeHoursClockTime(entry.endTimeEt);
+        var dayIndex = typeof entry.dayIndex === "number"
+          ? entry.dayIndex
+          : dayMeta && typeof dayMeta.index === "number"
+            ? dayMeta.index
+            : null;
+
+        if (!dayMeta || dayIndex === null || !startTime || !endTime) {
+          return null;
+        }
+
+        return {
+          dayLabel: dayMeta.label,
+          dayIndex: dayIndex,
+          startTimeEt: entry.startTimeEt || formatOfficeHoursTimePart(startTime, true),
+          endTimeEt: entry.endTimeEt || formatOfficeHoursTimePart(endTime, true),
+          startMinutes: startTime.totalMinutes,
+          endMinutes: endTime.totalMinutes,
+          timeRange: entry.timeRange || buildOfficeHoursTimeRange(startTime, endTime),
+          zoomUrl: entry.zoomUrl || entry.url
+        };
+      }
+
+      function getDefaultOfficeHoursSessions() {
+        return Object.keys(growthExperienceConfig)
+          .map(function (entryKey) {
+            return normalizeOfficeHoursSession(growthExperienceConfig[entryKey]);
+          })
+          .filter(function (session) { return !!session; })
+          .sort(compareOfficeHoursSessions);
+      }
+
+      function createOfficeHoursSessionCard(session) {
+        var card = document.createElement("article");
+        var copy = document.createElement("div");
+        var badge = document.createElement("span");
+        var dayHeading = document.createElement("h3");
+        var timeCopy = document.createElement("p");
+        var link = document.createElement("a");
+
+        card.className = "office-hours-session-card";
+        card.setAttribute("data-office-hours-session", "");
+        card.setAttribute("data-office-hours-day", String(session.dayIndex));
+        card.setAttribute("data-office-hours-start-minutes", String(session.startMinutes));
+
+        copy.className = "office-hours-session-copy";
+
+        badge.className = "office-hours-badge";
+        badge.setAttribute("data-office-hours-badge", "");
+        badge.hidden = true;
+        badge.textContent = "Next up";
+
+        dayHeading.className = "office-hours-session-day";
+        dayHeading.textContent = session.dayLabel;
+
+        timeCopy.className = "office-hours-session-time";
+        timeCopy.setAttribute("data-office-hours-time", session.timeRange);
+        timeCopy.textContent = session.timeRange + " ET";
+
+        link.className = "office-hours-session";
+        link.href = session.zoomUrl;
+        link.textContent = "Join Zoom room";
+        link.setAttribute("aria-label", "Join " + session.dayLabel + " office hours Zoom room");
+        setAnchorToOpenInNewTab(link);
+
+        copy.appendChild(badge);
+        copy.appendChild(dayHeading);
+        copy.appendChild(timeCopy);
+        card.appendChild(copy);
+        card.appendChild(link);
+
+        return card;
+      }
+
+      function renderOfficeHoursSchedule(sessions) {
+        var scheduleEl = document.querySelector("[data-office-hours-schedule]");
+        var normalizedSessions = Array.isArray(sessions)
+          ? sessions
+            .map(normalizeOfficeHoursSession)
+            .filter(function (session) { return !!session; })
+            .sort(compareOfficeHoursSessions)
+          : [];
+
+        if (!scheduleEl) {
+          return;
+        }
+
+        scheduleEl.innerHTML = "";
+
+        if (!normalizedSessions.length) {
+          var emptyState = createDebugElement("p", "office-hours-empty");
+          var supportLink = document.createElement("a");
+
+          emptyState.appendChild(document.createTextNode("No office hours are scheduled right now. Check back soon. If you believe this is an error, reach out to "));
+
+          supportLink.href = "mailto:growth@triplewhale.com";
+          supportLink.textContent = "growth@triplewhale.com";
+          supportLink.setAttribute("aria-label", "Email growth at Triple Whale");
+
+          emptyState.appendChild(supportLink);
+          emptyState.appendChild(document.createTextNode("."));
+          scheduleEl.appendChild(emptyState);
+          return;
+        }
+
+        normalizedSessions.forEach(function (session) {
+          scheduleEl.appendChild(createOfficeHoursSessionCard(session));
+        });
+
+        applyOfficeHoursTimezoneLabels();
+        applyOfficeHoursNextUpState();
+      }
+
+      function getOfficeHoursSheetEndpoint() {
+        if (!officeHoursSheetConfig || !officeHoursSheetConfig.functionPath || !officeHoursSheetConfig.sheetId) {
+          return null;
+        }
+
+        return officeHoursSheetConfig.functionPath
+          + "?sheetId=" + encodeURIComponent(officeHoursSheetConfig.sheetId)
+          + "&sheetName=" + encodeURIComponent(officeHoursSheetConfig.sheetName || "OfficeHours");
+      }
+
+      function fetchSharedOfficeHoursSchedule() {
+        var endpoint = getOfficeHoursSheetEndpoint();
+
+        if (!endpoint || typeof window.fetch !== "function") {
+          return;
+        }
+
+        window.fetch(endpoint, {
+          headers: {
+            Accept: "application/json"
+          }
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error("Unable to load office hours schedule.");
+            }
+
+            return response.json();
+          })
+          .then(function (payload) {
+            if (!payload || !Array.isArray(payload.sessions)) {
+              throw new Error("Office hours schedule payload was invalid.");
+            }
+
+            renderOfficeHoursSchedule(payload.sessions);
+          })
+          .catch(function () {
+            renderOfficeHoursSchedule(getDefaultOfficeHoursSessions());
+          });
+      }
+
       function applyGrowthOfficeHoursMode() {
         var isGrowthMode = isGrowthOfficeHoursMode();
 
@@ -2233,13 +2526,16 @@
         });
       }
 
+      renderOfficeHoursSchedule(getDefaultOfficeHoursSessions());
       applyTimezoneLabels();
-      applyOfficeHoursTimezoneLabels();
-      applyOfficeHoursNextUpState();
       applyBrandCopy();
       applyActiveMspContext();
       applyActiveBookingContext();
       applyGrowthOfficeHoursMode();
+
+      if (isGrowthOfficeHoursMode()) {
+        fetchSharedOfficeHoursSchedule();
+      }
 
       function getItemsForMsp(itemsByMsp, mspKey) {
         if (!itemsByMsp || typeof itemsByMsp !== "object") {
@@ -3130,6 +3426,24 @@
         container.appendChild(tbody);
       }
 
+      function initializeDebugOfficeHoursNote(panel) {
+        if (!panel) {
+          return;
+        }
+
+        var note = panel.querySelector("[data-debug-office-hours-note]");
+        var link = panel.querySelector("[data-debug-office-hours-link]");
+        var sheetUrl = officeHoursSheetConfig && officeHoursSheetConfig.sheetUrl;
+
+        if (!note || !link || !sheetUrl) {
+          return;
+        }
+
+        link.href = sheetUrl;
+        setAnchorToOpenInNewTab(link);
+        note.hidden = false;
+      }
+
       function renderDebugPanel() {
         var panel = document.querySelector("[data-debug-panel]");
 
@@ -3140,6 +3454,7 @@
         panel.hidden = false;
         renderDebugAlerts(panel.querySelector("[data-debug-alerts]"));
         renderDebugOverview(panel.querySelector("[data-debug-overview]"));
+        initializeDebugOfficeHoursNote(panel);
         initializeDebugResetButton(panel);
         syncDebugPanelHeight();
       }
