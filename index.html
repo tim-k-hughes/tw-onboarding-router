@@ -1381,7 +1381,7 @@
           <p class="debug-eyebrow">Debug View</p>
           <h2>Why this page looks the way it does</h2>
           <p class="debug-help">A cookie here just means a saved value from a past visit. The table shows the resolved value, how it was chosen, and the values you can actively use to change each setting. Default and fallback behavior is explained in the notes column. Hover a value to see what it does.</p>
-          <p class="debug-note" data-debug-office-hours-note hidden>Growth office hours are managed in the shared <a href="#" data-debug-office-hours-link>Google Sheet</a> for review.</p>
+          <p class="debug-note" data-debug-office-hours-note hidden>Growth office hours and sheet-driven URLs are managed in the shared <a href="#" data-debug-office-hours-link>Google Sheet</a> for review.</p>
         </div>
 
         <section class="debug-section" data-debug-alerts hidden></section>
@@ -1410,7 +1410,7 @@
       var resourceRouting = linkConfig.resourceRouting || {};
       var checklistSections = linkConfig.checklistSections || {};
       var growthExperienceConfig = linkConfig.growthExperience || {};
-      var officeHoursSheetConfig = growthExperienceConfig.officeHoursSheet || {};
+      var sharedSheetConfig = growthExperienceConfig.sharedSheet || {};
 
       function normalizeMspValue(value) {
         if (!value) {
@@ -1925,18 +1925,27 @@
         });
       }
 
-      addBookingLinksFromGroup(linkConfig.bookingButtons);
-      addBookingLinksFromGroup(linkConfig.additionalCoverageLink);
-      addBookingLinksFromGroup(linkConfig.growthExperience);
+      function rebuildBookingLinks() {
+        bookingLinks = {};
+        addBookingLinksFromGroup(linkConfig.bookingButtons);
+        addBookingLinksFromGroup(linkConfig.additionalCoverageLink);
+        addBookingLinksFromGroup(growthExperienceConfig);
+      }
 
-      document.querySelectorAll("[data-link]").forEach(function (el) {
-        var key = el.getAttribute("data-link");
-        if (bookingLinks[key]) {
-          el.href = bookingLinks[key];
-        }
+      function applyBookingLinksToDom() {
+        document.querySelectorAll("[data-link]").forEach(function (el) {
+          var key = el.getAttribute("data-link");
 
-        setAnchorToOpenInNewTab(el);
-      });
+          if (bookingLinks[key]) {
+            el.href = bookingLinks[key];
+          }
+
+          setAnchorToOpenInNewTab(el);
+        });
+      }
+
+      rebuildBookingLinks();
+      applyBookingLinksToDom();
 
       function normalizeGeoRecommendation(value) {
         if (!value) {
@@ -2185,18 +2194,246 @@
         applyOfficeHoursNextUpState();
       }
 
-      function getOfficeHoursSheetEndpoint() {
-        if (!officeHoursSheetConfig || !officeHoursSheetConfig.functionPath || !officeHoursSheetConfig.sheetId) {
+      function updateBookingEntryFromSheet(targetEntry, sourceEntry) {
+        if (!targetEntry || !sourceEntry) {
+          return;
+        }
+
+        if (sourceEntry.label) {
+          targetEntry.label = sourceEntry.label;
+        }
+
+        if (sourceEntry.defaultUrl) {
+          targetEntry.url = sourceEntry.defaultUrl;
+        }
+
+        targetEntry.mspUrls = targetEntry.mspUrls && typeof targetEntry.mspUrls === "object"
+          ? targetEntry.mspUrls
+          : {};
+        targetEntry.cohortUrls = targetEntry.cohortUrls && typeof targetEntry.cohortUrls === "object"
+          ? targetEntry.cohortUrls
+          : {};
+
+        if (sourceEntry.customUrl) {
+          targetEntry.mspUrls.custom = sourceEntry.customUrl;
+        }
+
+        if (sourceEntry.smbUrl) {
+          targetEntry.cohortUrls.smb = sourceEntry.smbUrl;
+        }
+
+        if (sourceEntry.mmUrl) {
+          targetEntry.cohortUrls.mm = sourceEntry.mmUrl;
+        }
+
+        if (sourceEntry.entUrl) {
+          targetEntry.cohortUrls.ent = sourceEntry.entUrl;
+        }
+      }
+
+      function applyBookingLinksFromSheetConfig(bookingConfig) {
+        if (!bookingConfig || typeof bookingConfig !== "object") {
+          return;
+        }
+
+        var bookingTargets = [
+          { key: "americas", target: linkConfig.bookingButtons && linkConfig.bookingButtons.americasCard },
+          { key: "emea", target: linkConfig.bookingButtons && linkConfig.bookingButtons.emeaCard },
+          { key: "apac", target: linkConfig.bookingButtons && linkConfig.bookingButtons.apacCard },
+          { key: "worldwide", target: linkConfig.additionalCoverageLink && linkConfig.additionalCoverageLink.worldwideAvailability }
+        ];
+
+        bookingTargets.forEach(function (mapping) {
+          if (!mapping || !mapping.target || !bookingConfig[mapping.key]) {
+            return;
+          }
+
+          updateBookingEntryFromSheet(mapping.target, bookingConfig[mapping.key]);
+        });
+      }
+
+      function applyConfigurationLinksFromSheetConfig(configurationLinks) {
+        if (!configurationLinks || typeof configurationLinks !== "object" || typeof CONFIGURATION_URLS !== "object") {
+          return;
+        }
+
+        if (configurationLinks.triple_pixel_shopify && configurationLinks.triple_pixel_shopify.url) {
+          CONFIGURATION_URLS.triplePixelByMsp.shopify = configurationLinks.triple_pixel_shopify.url;
+        }
+        if (configurationLinks.triple_pixel_woocommerce && configurationLinks.triple_pixel_woocommerce.url) {
+          CONFIGURATION_URLS.triplePixelByMsp.woocommerce = configurationLinks.triple_pixel_woocommerce.url;
+        }
+        if (configurationLinks.triple_pixel_bigcommerce && configurationLinks.triple_pixel_bigcommerce.url) {
+          CONFIGURATION_URLS.triplePixelByMsp.bigcommerce = configurationLinks.triple_pixel_bigcommerce.url;
+        }
+        if (configurationLinks.triple_pixel_custom && configurationLinks.triple_pixel_custom.url) {
+          CONFIGURATION_URLS.triplePixelByMsp.custom = configurationLinks.triple_pixel_custom.url;
+        }
+        if (configurationLinks.triple_pixel_headless && configurationLinks.triple_pixel_headless.url) {
+          CONFIGURATION_URLS.headlessTriplePixel = configurationLinks.triple_pixel_headless.url;
+        }
+        if (configurationLinks.integrations && configurationLinks.integrations.url) {
+          CONFIGURATION_URLS.sharedItems.integrations = configurationLinks.integrations.url;
+        }
+        if (configurationLinks.utms && configurationLinks.utms.url) {
+          CONFIGURATION_URLS.sharedItems.utms = configurationLinks.utms.url;
+        }
+        if (configurationLinks.sonar_send && configurationLinks.sonar_send.url) {
+          CONFIGURATION_URLS.sharedItems.sonarSend = configurationLinks.sonar_send.url;
+        }
+        if (configurationLinks.sonar_optimize && configurationLinks.sonar_optimize.url) {
+          CONFIGURATION_URLS.sharedItems.sonarOptimize = configurationLinks.sonar_optimize.url;
+        }
+        if (configurationLinks.post_purchase_survey && configurationLinks.post_purchase_survey.url) {
+          CONFIGURATION_URLS.sharedItems.postPurchaseSurvey = configurationLinks.post_purchase_survey.url;
+        }
+        if (configurationLinks.cogs && configurationLinks.cogs.url) {
+          CONFIGURATION_URLS.sharedItems.cogs = configurationLinks.cogs.url;
+        }
+        if (configurationLinks.shipping_costs && configurationLinks.shipping_costs.url) {
+          CONFIGURATION_URLS.sharedItems.shippingCosts = configurationLinks.shipping_costs.url;
+        }
+        if (configurationLinks.handling_fees && configurationLinks.handling_fees.url) {
+          CONFIGURATION_URLS.sharedItems.handlingFees = configurationLinks.handling_fees.url;
+        }
+        if (configurationLinks.expenses && configurationLinks.expenses.url) {
+          CONFIGURATION_URLS.sharedItems.expenses = configurationLinks.expenses.url;
+        }
+        if (configurationLinks.subscription_orders && configurationLinks.subscription_orders.url) {
+          CONFIGURATION_URLS.sharedItems.subscriptionOrders = configurationLinks.subscription_orders.url;
+        }
+        if (configurationLinks.affiliates_and_influencers && configurationLinks.affiliates_and_influencers.url) {
+          CONFIGURATION_URLS.sharedItems.affiliatesAndInfluencers = configurationLinks.affiliates_and_influencers.url;
+        }
+      }
+
+      function applyActivationLinksFromSheetConfig(activationLinks) {
+        if (!activationLinks || typeof activationLinks !== "object" || typeof ACTIVATION_URLS !== "object") {
+          return;
+        }
+
+        if (activationLinks.summary_dashboard && activationLinks.summary_dashboard.url) {
+          ACTIVATION_URLS.sharedItems.summaryDashboard = activationLinks.summary_dashboard.url;
+        }
+        if (activationLinks.attribution_dashboard && activationLinks.attribution_dashboard.url) {
+          ACTIVATION_URLS.sharedItems.attributionDashboard = activationLinks.attribution_dashboard.url;
+        }
+        if (activationLinks.creative_analysis && activationLinks.creative_analysis.url) {
+          ACTIVATION_URLS.sharedItems.creativeAnalysis = activationLinks.creative_analysis.url;
+        }
+        if (activationLinks.cohort_analysis && activationLinks.cohort_analysis.url) {
+          ACTIVATION_URLS.sharedItems.cohortAnalysis = activationLinks.cohort_analysis.url;
+        }
+        if (activationLinks.customer_segments && activationLinks.customer_segments.url) {
+          ACTIVATION_URLS.sharedItems.customerSegments = activationLinks.customer_segments.url;
+        }
+        if (activationLinks.ai_visibility && activationLinks.ai_visibility.url) {
+          ACTIVATION_URLS.sharedItems.aiVisibility = activationLinks.ai_visibility.url;
+        }
+        if (activationLinks.moby && activationLinks.moby.url) {
+          ACTIVATION_URLS.sharedItems.moby = activationLinks.moby.url;
+        }
+        if (activationLinks.mmm && activationLinks.mmm.url) {
+          ACTIVATION_URLS.packageAdditions.professional.mmm = activationLinks.mmm.url;
+        }
+        if (activationLinks.incrementality && activationLinks.incrementality.url) {
+          ACTIVATION_URLS.packageAdditions.professional.incrementality = activationLinks.incrementality.url;
+        }
+      }
+
+      function applyAddonLinksFromSheetConfig(addonLinks) {
+        if (!addonLinks || typeof addonLinks !== "object") {
+          return;
+        }
+
+        if (CONFIGURATION_URLS && CONFIGURATION_URLS.addonCallouts && CONFIGURATION_URLS.addonCallouts.conversion) {
+          CONFIGURATION_URLS.addonCallouts.conversion.items = Array.isArray(addonLinks.conversion)
+            ? addonLinks.conversion.map(function (item) {
+              return {
+                label: item.label,
+                url: item.url
+              };
+            })
+            : CONFIGURATION_URLS.addonCallouts.conversion.items;
+        }
+
+        if (ACTIVATION_URLS && ACTIVATION_URLS.addonCallouts && ACTIVATION_URLS.addonCallouts.retention) {
+          ACTIVATION_URLS.addonCallouts.retention.items = Array.isArray(addonLinks.retention)
+            ? addonLinks.retention.map(function (item) {
+              return {
+                label: item.label,
+                url: item.url
+              };
+            })
+            : ACTIVATION_URLS.addonCallouts.retention.items;
+        }
+      }
+
+      function refreshChecklistSectionsFromCurrentUrls() {
+        var beforeKickoffSection = checklistSections.beforeKickoff;
+        var kickoffOutcomesSection = checklistSections.kickoffOutcomes;
+
+        if (beforeKickoffSection) {
+          beforeKickoffSection.headlessItemOverrides = {
+            triplePixel: {
+              url: CONFIGURATION_URLS.headlessTriplePixel
+            }
+          };
+          beforeKickoffSection.itemsByMsp = {
+            shopify: getConfigurationItems(CONFIGURATION_URLS.triplePixelByMsp.shopify),
+            woocommerce: getConfigurationItems(CONFIGURATION_URLS.triplePixelByMsp.woocommerce),
+            bigcommerce: getConfigurationItems(CONFIGURATION_URLS.triplePixelByMsp.bigcommerce),
+            custom: getConfigurationItems(CONFIGURATION_URLS.triplePixelByMsp.custom)
+          };
+          beforeKickoffSection.callout = CONFIGURATION_URLS.addonCallouts.conversion;
+        }
+
+        if (kickoffOutcomesSection) {
+          kickoffOutcomesSection.items = getActivationItems();
+          kickoffOutcomesSection.packageOverrides = kickoffOutcomesSection.packageOverrides || {};
+          kickoffOutcomesSection.packageOverrides.professional = kickoffOutcomesSection.packageOverrides.professional || {};
+          kickoffOutcomesSection.packageOverrides.professional.additionalItems = getProfessionalActivationItems();
+          kickoffOutcomesSection.callout = ACTIVATION_URLS.addonCallouts.retention;
+        }
+      }
+
+      function getSharedSheetEndpoint() {
+        var tabs = sharedSheetConfig && sharedSheetConfig.tabs ? sharedSheetConfig.tabs : {};
+
+        if (!sharedSheetConfig || !sharedSheetConfig.functionPath || !sharedSheetConfig.sheetId) {
           return null;
         }
 
-        return officeHoursSheetConfig.functionPath
-          + "?sheetId=" + encodeURIComponent(officeHoursSheetConfig.sheetId)
-          + "&sheetName=" + encodeURIComponent(officeHoursSheetConfig.sheetName || "OfficeHours");
+        return sharedSheetConfig.functionPath
+          + "?sheetId=" + encodeURIComponent(sharedSheetConfig.sheetId)
+          + "&officeHoursSheet=" + encodeURIComponent(tabs.officeHours || "OfficeHours")
+          + "&bookingLinksSheet=" + encodeURIComponent(tabs.bookingLinks || "BookingLinks")
+          + "&configurationLinksSheet=" + encodeURIComponent(tabs.configurationLinks || "ConfigurationLinks")
+          + "&activationLinksSheet=" + encodeURIComponent(tabs.activationLinks || "ActivationLinks")
+          + "&addonLinksSheet=" + encodeURIComponent(tabs.addonLinks || "AddonLinks");
       }
 
-      function fetchSharedOfficeHoursSchedule() {
-        var endpoint = getOfficeHoursSheetEndpoint();
+      function applySharedSheetConfig(payload) {
+        if (!payload || typeof payload !== "object") {
+          return;
+        }
+
+        applyBookingLinksFromSheetConfig(payload.bookingLinks);
+        applyConfigurationLinksFromSheetConfig(payload.configurationLinks);
+        applyActivationLinksFromSheetConfig(payload.activationLinks);
+        applyAddonLinksFromSheetConfig(payload.addonLinks);
+        refreshChecklistSectionsFromCurrentUrls();
+        rebuildBookingLinks();
+        applyBookingLinksToDom();
+        renderResourceSections();
+
+        if (payload.officeHours && Array.isArray(payload.officeHours.sessions)) {
+          renderOfficeHoursSchedule(payload.officeHours.sessions);
+        }
+      }
+
+      function fetchSharedSheetConfig() {
+        var endpoint = getSharedSheetEndpoint();
 
         if (!endpoint || typeof window.fetch !== "function") {
           return;
@@ -2209,19 +2446,19 @@
         })
           .then(function (response) {
             if (!response.ok) {
-              throw new Error("Unable to load office hours schedule.");
+              throw new Error("Unable to load shared sheet config.");
             }
 
             return response.json();
           })
           .then(function (payload) {
-            if (!payload || !Array.isArray(payload.sessions)) {
-              throw new Error("Office hours schedule payload was invalid.");
-            }
-
-            renderOfficeHoursSchedule(payload.sessions);
+            applySharedSheetConfig(payload);
           })
           .catch(function () {
+            rebuildBookingLinks();
+            applyBookingLinksToDom();
+            refreshChecklistSectionsFromCurrentUrls();
+            renderResourceSections();
             renderOfficeHoursSchedule(getDefaultOfficeHoursSessions());
           });
       }
@@ -2527,15 +2764,14 @@
       }
 
       renderOfficeHoursSchedule(getDefaultOfficeHoursSessions());
+      refreshChecklistSectionsFromCurrentUrls();
+      renderResourceSections();
       applyTimezoneLabels();
       applyBrandCopy();
       applyActiveMspContext();
       applyActiveBookingContext();
       applyGrowthOfficeHoursMode();
-
-      if (isGrowthOfficeHoursMode()) {
-        fetchSharedOfficeHoursSchedule();
-      }
+      fetchSharedSheetConfig();
 
       function getItemsForMsp(itemsByMsp, mspKey) {
         if (!itemsByMsp || typeof itemsByMsp !== "object") {
@@ -2723,127 +2959,127 @@
         return ", ";
       }
 
-      document.querySelectorAll("[data-resource-section]").forEach(function (sectionEl) {
-        var sectionKey = sectionEl.getAttribute("data-resource-section");
-        var sectionConfig = checklistSections[sectionKey];
-        var timingEl = sectionEl.querySelector("[data-resource-timing]");
-        var titleEl = sectionEl.querySelector("[data-resource-title]");
-        var descriptionEl = sectionEl.querySelector("[data-resource-description]");
-        var listEl = sectionEl.querySelector("[data-resource-list]");
-        var addonEl = sectionEl.querySelector("[data-resource-addon]");
-        var addonBadgeEl = sectionEl.querySelector("[data-resource-addon-badge]");
-        var addonTitleEl = sectionEl.querySelector("[data-resource-addon-title]");
-        var addonDescriptionEl = sectionEl.querySelector("[data-resource-addon-description]");
-        var addonListEl = sectionEl.querySelector("[data-resource-addon-list]");
-        var itemsByMsp = sectionConfig && sectionConfig.itemsByMsp && typeof sectionConfig.itemsByMsp === "object"
-          ? sectionConfig.itemsByMsp
-          : null;
-        var baseItems = getItemsForMsp(itemsByMsp, activeMsp);
-        var items = baseItems.length
-          ? applyPackageItemRules(applyHeadlessItemOverrides(baseItems, sectionConfig), sectionConfig)
-          : sectionConfig && Array.isArray(sectionConfig.items)
-            ? applyPackageItemRules(sectionConfig.items, sectionConfig)
-            : [];
-        var addonCallout = getCalloutForSection(sectionConfig);
+      function renderResourceSections() {
+        document.querySelectorAll("[data-resource-section]").forEach(function (sectionEl) {
+          var sectionKey = sectionEl.getAttribute("data-resource-section");
+          var sectionConfig = checklistSections[sectionKey];
+          var timingEl = sectionEl.querySelector("[data-resource-timing]");
+          var titleEl = sectionEl.querySelector("[data-resource-title]");
+          var descriptionEl = sectionEl.querySelector("[data-resource-description]");
+          var listEl = sectionEl.querySelector("[data-resource-list]");
+          var addonEl = sectionEl.querySelector("[data-resource-addon]");
+          var addonBadgeEl = sectionEl.querySelector("[data-resource-addon-badge]");
+          var addonTitleEl = sectionEl.querySelector("[data-resource-addon-title]");
+          var addonDescriptionEl = sectionEl.querySelector("[data-resource-addon-description]");
+          var addonListEl = sectionEl.querySelector("[data-resource-addon-list]");
+          var itemsByMsp = sectionConfig && sectionConfig.itemsByMsp && typeof sectionConfig.itemsByMsp === "object"
+            ? sectionConfig.itemsByMsp
+            : null;
+          var baseItems = getItemsForMsp(itemsByMsp, activeMsp);
+          var items = baseItems.length
+            ? applyPackageItemRules(applyHeadlessItemOverrides(baseItems, sectionConfig), sectionConfig)
+            : sectionConfig && Array.isArray(sectionConfig.items)
+              ? applyPackageItemRules(sectionConfig.items, sectionConfig)
+              : [];
+          var addonCallout = getCalloutForSection(sectionConfig);
 
-        if (timingEl && sectionConfig && sectionConfig.timingLabel) {
-          timingEl.textContent = sectionConfig.timingLabel;
-        }
+          if (timingEl && sectionConfig && sectionConfig.timingLabel) {
+            timingEl.textContent = sectionConfig.timingLabel;
+          }
 
-        if (titleEl && sectionConfig && sectionConfig.title) {
-          titleEl.textContent = sectionConfig.title;
-        }
+          if (titleEl && sectionConfig && sectionConfig.title) {
+            titleEl.textContent = sectionConfig.title;
+          }
 
-        if (descriptionEl && sectionConfig && sectionConfig.description) {
-          descriptionEl.textContent = sectionConfig.description;
-        }
+          if (descriptionEl && sectionConfig && sectionConfig.description) {
+            descriptionEl.textContent = sectionConfig.description;
+          }
 
-        if (!items.length) {
-          return;
-        }
+          listEl.innerHTML = "";
 
-        listEl.innerHTML = "";
+          if (items.length) {
+            items.forEach(function (item) {
+              var itemLinks = item && Array.isArray(item.links)
+                ? item.links.filter(function (linkItem) { return !!(linkItem && linkItem.label); })
+                : [];
+              var hasRenderableLabel = !!(item && item.label);
+              var hasRenderableLinks = !!itemLinks.length;
 
-        items.forEach(function (item) {
-          var itemLinks = item && Array.isArray(item.links)
-            ? item.links.filter(function (linkItem) { return !!(linkItem && linkItem.label); })
-            : [];
-          var hasRenderableLabel = !!(item && item.label);
-          var hasRenderableLinks = !!itemLinks.length;
+              if (!item || (!hasRenderableLabel && !hasRenderableLinks)) {
+                return;
+              }
 
-          if (!item || (!hasRenderableLabel && !hasRenderableLinks)) {
+              var li = document.createElement("li");
+              var strong = document.createElement("strong");
+
+              if (hasRenderableLinks) {
+                if (item.label) {
+                  if (item.linkLabelWhenSingleLink && itemLinks.length === 1 && itemLinks[0] && itemLinks[0].url) {
+                    appendLinkContent(strong, {
+                      label: item.label,
+                      url: itemLinks[0].url
+                    });
+                    appendInlineText(strong, " ");
+                  } else {
+                    appendInlineText(strong, item.label + " ");
+                  }
+                }
+
+                itemLinks.forEach(function (linkItem, index) {
+                  appendInlineText(strong, getLinkSeparator(index, itemLinks.length, item.linkJoinStyle));
+                  appendLinkContent(strong, linkItem);
+                });
+              } else if (item.url) {
+                appendLinkContent(strong, item);
+              } else {
+                strong.textContent = item.label;
+              }
+
+              li.appendChild(strong);
+              listEl.appendChild(li);
+            });
+          }
+
+          if (!addonEl || !addonListEl) {
             return;
           }
 
-          var li = document.createElement("li");
-          var strong = document.createElement("strong");
-
-          if (hasRenderableLinks) {
-            if (item.label) {
-              if (item.linkLabelWhenSingleLink && itemLinks.length === 1 && itemLinks[0] && itemLinks[0].url) {
-                appendLinkContent(strong, {
-                  label: item.label,
-                  url: itemLinks[0].url
-                });
-                appendInlineText(strong, " ");
-              } else {
-                appendInlineText(strong, item.label + " ");
-              }
+          if (!addonCallout) {
+            addonEl.hidden = true;
+            addonListEl.innerHTML = "";
+            if (addonDescriptionEl) {
+              addonDescriptionEl.textContent = "";
+              addonDescriptionEl.hidden = true;
             }
-
-            itemLinks.forEach(function (linkItem, index) {
-              appendInlineText(strong, getLinkSeparator(index, itemLinks.length, item.linkJoinStyle));
-              appendLinkContent(strong, linkItem);
-            });
-          } else if (item.url) {
-            appendLinkContent(strong, item);
-          } else {
-            strong.textContent = item.label;
+            return;
           }
 
-          li.appendChild(strong);
-          listEl.appendChild(li);
-        });
+          addonEl.hidden = false;
 
-        if (!addonEl || !addonListEl) {
-          return;
-        }
+          if (addonBadgeEl) {
+            addonBadgeEl.textContent = addonCallout.badgeLabel;
+          }
 
-        if (!addonCallout) {
-          addonEl.hidden = true;
-          addonListEl.innerHTML = "";
+          if (addonTitleEl) {
+            addonTitleEl.textContent = addonCallout.title;
+          }
+
           if (addonDescriptionEl) {
-            addonDescriptionEl.textContent = "";
-            addonDescriptionEl.hidden = true;
+            addonDescriptionEl.textContent = addonCallout.description;
+            addonDescriptionEl.hidden = !addonCallout.description;
           }
-          return;
-        }
 
-        addonEl.hidden = false;
+          addonListEl.innerHTML = "";
 
-        if (addonBadgeEl) {
-          addonBadgeEl.textContent = addonCallout.badgeLabel;
-        }
-
-        if (addonTitleEl) {
-          addonTitleEl.textContent = addonCallout.title;
-        }
-
-        if (addonDescriptionEl) {
-          addonDescriptionEl.textContent = addonCallout.description;
-          addonDescriptionEl.hidden = !addonCallout.description;
-        }
-
-        addonListEl.innerHTML = "";
-
-        addonCallout.items.forEach(function (item) {
-          var li = document.createElement("li");
-          var strong = document.createElement("strong");
-          appendLinkContent(strong, item);
-          li.appendChild(strong);
-          addonListEl.appendChild(li);
+          addonCallout.items.forEach(function (item) {
+            var li = document.createElement("li");
+            var strong = document.createElement("strong");
+            appendLinkContent(strong, item);
+            li.appendChild(strong);
+            addonListEl.appendChild(li);
+          });
         });
-      });
+      }
 
       applyNewTabBehavior(document);
 
@@ -3433,7 +3669,7 @@
 
         var note = panel.querySelector("[data-debug-office-hours-note]");
         var link = panel.querySelector("[data-debug-office-hours-link]");
-        var sheetUrl = officeHoursSheetConfig && officeHoursSheetConfig.sheetUrl;
+        var sheetUrl = sharedSheetConfig && sharedSheetConfig.sheetUrl;
 
         if (!note || !link || !sheetUrl) {
           return;

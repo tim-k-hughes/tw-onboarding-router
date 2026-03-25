@@ -94,14 +94,42 @@ function sanitizeSheetId(value) {
   return /^[A-Za-z0-9_-]+$/.test(normalizedValue) ? normalizedValue : null;
 }
 
-function sanitizeSheetName(value) {
-  var normalizedValue = trimCell(value || "OfficeHours");
+function sanitizeSheetName(value, fallback) {
+  var normalizedValue = trimCell(value || fallback);
 
   if (!normalizedValue || /[\r\n]/.test(normalizedValue) || normalizedValue.length > 120) {
     return null;
   }
 
   return normalizedValue;
+}
+
+function rowsToObjects(rows) {
+  if (!Array.isArray(rows) || rows.length < 2) {
+    return [];
+  }
+
+  var headers = rows[0].map(normalizeHeader);
+
+  return rows.slice(1)
+    .map(function (cells) {
+      var rowData = {};
+
+      headers.forEach(function (header, index) {
+        if (!header) {
+          return;
+        }
+
+        rowData[header] = trimCell(cells[index]);
+      });
+
+      return rowData;
+    })
+    .filter(function (rowData) {
+      return Object.keys(rowData).some(function (key) {
+        return trimCell(rowData[key]) !== "";
+      });
+    });
 }
 
 function parseEnabledValue(value) {
@@ -197,7 +225,7 @@ function compareSessions(firstSession, secondSession) {
   return firstSession.startMinutes - secondSession.startMinutes;
 }
 
-function buildSessionFromRow(rowData) {
+function buildOfficeHoursSession(rowData) {
   if (!parseEnabledValue(rowData.enabled)) {
     return null;
   }
@@ -223,17 +251,81 @@ function buildSessionFromRow(rowData) {
   };
 }
 
-exports.handler = async function (event) {
-  var query = event && event.queryStringParameters ? event.queryStringParameters : {};
-  var sheetId = sanitizeSheetId(query.sheetId);
-  var sheetName = sanitizeSheetName(query.sheetName);
+function parseOfficeHours(rows) {
+  return rowsToObjects(rows)
+    .map(buildOfficeHoursSession)
+    .filter(function (session) { return !!session; })
+    .sort(compareSessions);
+}
 
-  if (!sheetId || !sheetName) {
-    return jsonResponse(400, {
-      error: "Missing or invalid Google Sheet settings."
+function parseBookingLinks(rows) {
+  return rowsToObjects(rows).reduce(function (result, rowData) {
+    var key = trimCell(rowData.key);
+
+    if (!key) {
+      return result;
+    }
+
+    result[key] = {
+      label: trimCell(rowData.label),
+      defaultUrl: trimCell(rowData.default_url),
+      customUrl: trimCell(rowData.custom_url),
+      smbUrl: trimCell(rowData.smb_url),
+      mmUrl: trimCell(rowData.mm_url),
+      entUrl: trimCell(rowData.ent_url)
+    };
+
+    return result;
+  }, {});
+}
+
+function parseSimpleLinkMap(rows) {
+  return rowsToObjects(rows).reduce(function (result, rowData) {
+    var key = trimCell(rowData.key);
+
+    if (!key) {
+      return result;
+    }
+
+    result[key] = {
+      label: trimCell(rowData.label),
+      package: trimCell(rowData.package),
+      section: trimCell(rowData.section),
+      url: trimCell(rowData.url)
+    };
+
+    return result;
+  }, {});
+}
+
+function parseAddonLinks(rows) {
+  return rowsToObjects(rows).reduce(function (result, rowData) {
+    var section = trimCell(rowData.section).toLowerCase();
+    var url = trimCell(rowData.url);
+    var label = trimCell(rowData.label);
+
+    if (!section || !label || !/^https?:\/\//i.test(url)) {
+      return result;
+    }
+
+    if (!Array.isArray(result[section])) {
+      result[section] = [];
+    }
+
+    result[section].push({
+      key: trimCell(rowData.key),
+      label: label,
+      url: url
     });
-  }
 
+    return result;
+  }, {
+    conversion: [],
+    retention: []
+  });
+}
+
+async function fetchSheetRows(sheetId, sheetName) {
   var csvUrl = "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(sheetName);
 
   try {
@@ -244,54 +336,68 @@ exports.handler = async function (event) {
     });
 
     if (!upstreamResponse.ok) {
-      return jsonResponse(502, {
-        error: "Unable to load office hours data from Google Sheets."
-      });
+      return null;
     }
 
     var csvText = await upstreamResponse.text();
-    var rows = parseCsv(csvText).filter(function (row) {
+    return parseCsv(csvText).filter(function (row) {
       return Array.isArray(row) && row.some(function (cell) {
         return trimCell(cell) !== "";
       });
     });
-
-    if (!rows.length) {
-      return jsonResponse(200, {
-        source: "google-sheet",
-        sheetId: sheetId,
-        sheetName: sheetName,
-        sessions: []
-      });
-    }
-
-    var headers = rows[0].map(normalizeHeader);
-    var sessions = rows.slice(1)
-      .map(function (cells) {
-        var rowData = {};
-
-        headers.forEach(function (header, index) {
-          if (!header) {
-            return;
-          }
-
-          rowData[header] = trimCell(cells[index]);
-        });
-
-        return buildSessionFromRow(rowData);
-      })
-      .filter(function (session) { return !!session; })
-      .sort(compareSessions);
-
-    return jsonResponse(200, {
-      source: "google-sheet",
-      sheetId: sheetId,
-      sheetName: sheetName,
-      sessions: sessions
-    });
   } catch (error) {
-    return jsonResponse(500, {
-      error: "Unable to refresh office hours data right now."
+    return null;
+  }
+}
+
+exports.handler = async function (event) {
+  var query = event && event.queryStringParameters ? event.queryStringParameters : {};
+  var sheetId = sanitizeSheetId(query.sheetId);
+  var tabs = {
+    officeHours: sanitizeSheetName(query.officeHoursSheet, "OfficeHours"),
+    bookingLinks: sanitizeSheetName(query.bookingLinksSheet, "BookingLinks"),
+    configurationLinks: sanitizeSheetName(query.configurationLinksSheet, "ConfigurationLinks"),
+    activationLinks: sanitizeSheetName(query.activationLinksSheet, "ActivationLinks"),
+    addonLinks: sanitizeSheetName(query.addonLinksSheet, "AddonLinks")
+  };
+
+  if (!sheetId || !tabs.officeHours || !tabs.bookingLinks || !tabs.configurationLinks || !tabs.activationLinks || !tabs.addonLinks) {
+    return jsonResponse(400, {
+      error: "Missing or invalid Google Sheet settings."
     });
   }
+
+  var results = await Promise.all([
+    fetchSheetRows(sheetId, tabs.officeHours),
+    fetchSheetRows(sheetId, tabs.bookingLinks),
+    fetchSheetRows(sheetId, tabs.configurationLinks),
+    fetchSheetRows(sheetId, tabs.activationLinks),
+    fetchSheetRows(sheetId, tabs.addonLinks)
+  ]);
+
+  var officeHoursRows = results[0];
+  var bookingLinksRows = results[1];
+  var configurationLinksRows = results[2];
+  var activationLinksRows = results[3];
+  var addonLinksRows = results[4];
+
+  if (!officeHoursRows && !bookingLinksRows && !configurationLinksRows && !activationLinksRows && !addonLinksRows) {
+    return jsonResponse(502, {
+      error: "Unable to load Google Sheet configuration."
+    });
+  }
+
+  return jsonResponse(200, {
+    source: "google-sheet",
+    sheetId: sheetId,
+    sheetUrl: "https://docs.google.com/spreadsheets/d/" + sheetId + "/edit",
+    tabs: tabs,
+    officeHours: {
+      sessions: officeHoursRows ? parseOfficeHours(officeHoursRows) : null
+    },
+    bookingLinks: bookingLinksRows ? parseBookingLinks(bookingLinksRows) : null,
+    configurationLinks: configurationLinksRows ? parseSimpleLinkMap(configurationLinksRows) : null,
+    activationLinks: activationLinksRows ? parseSimpleLinkMap(activationLinksRows) : null,
+    addonLinks: addonLinksRows ? parseAddonLinks(addonLinksRows) : null
+  });
 };
