@@ -1683,21 +1683,8 @@
         var queryCohort = normalizeCohortValue(rawCohort);
         var cookieCohort = normalizeCohortValue(getCookieValue(cohortCookieName));
 
-        function isPersistedRoutingCohort(value) {
-          return value === "smb" || value === "mm" || value === "ent";
-        }
-
-        if (cookieCohort && !isPersistedRoutingCohort(cookieCohort)) {
-          deleteCookieValue(cohortCookieName);
-          cookieCohort = null;
-        }
-
         if (queryCohort) {
-          if (isPersistedRoutingCohort(queryCohort)) {
-            setCookieValue(cohortCookieName, rawCohort);
-          } else {
-            deleteCookieValue(cohortCookieName);
-          }
+          setCookieValue(cohortCookieName, rawCohort);
           return queryCohort;
         }
 
@@ -1707,7 +1694,7 @@
       var activeCohort = getActiveCohort();
 
       function isGrowthOfficeHoursMode() {
-        return normalizeCohortValue(getQueryParamValue(bookingRouting.cohortQueryParam || "cohort")) === "growth";
+        return activeCohort === "growth";
       }
 
       function getActiveHeadless() {
@@ -3277,7 +3264,7 @@
             }
           ],
           invalidNote: "Use smb, mm, ent, or growth. Anything else is ignored.",
-          priorityNote: "Order used: platform-specific booking overrides first, then URL cohort, then the saved routing cohort cookie. SMB, MM, and ENT swap booking routers. Growth changes the page to the office-hours layout only when growth is explicitly present in the URL and is not reused from a saved cookie. If none are set, the page keeps the default shared booking routers."
+          priorityNote: "Order used: platform-specific booking overrides first, then URL cohort, then the saved cohort cookie. SMB, MM, and ENT swap booking routers. Growth changes the page to the office-hours layout and is also restored from the saved cohort cookie when the URL is missing. If none are set, the page keeps the default shared booking routers."
         },
         {
           key: "geo",
