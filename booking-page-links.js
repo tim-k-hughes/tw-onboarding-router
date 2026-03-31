@@ -191,21 +191,12 @@ window.BOOKING_PAGE_LINKS = {
     }
   },
 
-  // Session buttons shown when `?cohort=growth` is active.
+  // Growth office-hours sessions shown when `?cohort=growth` is active.
+  // The static branch keeps these Zoom URLs in-repo so no serverless sync is required.
+  // Use `enabled: false` to hide a session without removing its details.
   growthExperience: {
-    sharedSheet: {
-      functionPath: "/.netlify/functions/booking-page-config",
-      sheetId: "1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM",
-      sheetUrl: "https://docs.google.com/spreadsheets/d/1Z9guUZ4pvaDmb_HNl4tAeo9YUaMC8I_v-YhY6zuohLM/edit?usp=sharing",
-      tabs: {
-        officeHours: "OfficeHours",
-        bookingLinks: "BookingLinks",
-        configurationLinks: "ConfigurationLinks",
-        activationLinks: "ActivationLinks",
-        addonLinks: "AddonLinks"
-      }
-    },
     officeHoursTuesday: {
+      enabled: true,
       label: "Tuesday - 3-4 PM ET",
       day: "Tuesday",
       dayIndex: 2,
@@ -215,6 +206,7 @@ window.BOOKING_PAGE_LINKS = {
       url: "https://triplewhale.zoom.us/j/84126057531"
     },
     officeHoursWednesday: {
+      enabled: true,
       label: "Wednesday - 5-6 PM ET",
       day: "Wednesday",
       dayIndex: 3,
@@ -224,6 +216,7 @@ window.BOOKING_PAGE_LINKS = {
       url: "https://triplewhale.zoom.us/j/84126057531"
     },
     officeHoursThursday: {
+      enabled: false,
       label: "Thursday - 10-11 AM ET",
       day: "Thursday",
       dayIndex: 4,

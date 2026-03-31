@@ -1,10 +1,15 @@
 # Triple Whale Onboarding Booking Hub
-
-✨ **Live app:** [triplewhale-onboarding-kickoff.netlify.app
-](https://triplewhale-onboarding-kickoff.netlify.app/)
 ## Purpose
 This repo contains a single-page booking hub used as `{{booking_link}}` in the welcome email.  
 The page routes customers to book by region first (`Americas`, `EMEA`, `APAC`) with a `worldwide` fallback.
+
+## Deployment Model
+This branch is a fully client-side static site.
+
+- No serverless functions
+- No backend API
+- No Google Sheets dependency
+- Booking, resource, add-on, and growth office-hours URLs all live in `booking-page-links.js`
 
 ## Files
 - `index.html`: Single-page booking hub UI and client-side link binding.
@@ -78,16 +83,12 @@ The page now reads `?cohort=`, `?msp=`, `?headless=`, `?package=`, `?hasConversi
 - When the URL does not include `cohort`, the page falls back to the saved `tw_cohort` cookie, including restoring the `growth` office-hours experience on later visits
 - `msp=custom` takes precedence over cohort routing and swaps the Americas, EMEA, APAC, and worldwide links to the custom-team booking routers
 
-## Shared Google Sheet Source
-- The growth office-hours cards and the sheet-driven booking/resource URLs now come from one shared Google Sheet
-- `booking-page-links.js` -> `growthExperience.sharedSheet` stores the current sheet ID, the shared sheet URL, and the tab names used by the page
-- `netlify/functions/booking-page-config.js` reads the Google Sheet CSV tabs and returns normalized JSON to the page
-- The current tabs are `OfficeHours`, `BookingLinks`, `ConfigurationLinks`, `ActivationLinks`, and `AddonLinks`
-- The page still keeps the current in-repo booking links, resource URLs, add-on URLs, and Tuesday/Wednesday/Thursday office-hours sessions as fallback defaults if the sheet cannot be reached
-- The `OfficeHours` tab expects `enabled`, `day`, `start_time_et`, `end_time_et`, and `zoom_url`
-- `enabled=TRUE` shows a session, and `enabled=FALSE` hides it
-- `day` can be any weekday name, so the team can move a session to Friday or another day without editing code
-- The shared Google Sheet must stay viewable to the deployed site; if it stops loading, the page falls back to the built-in defaults
+## Static Growth Office Hours Source
+- Growth office-hours sessions are defined directly in `booking-page-links.js` -> `growthExperience`
+- Sessions can be turned on or off in `booking-page-links.js` with each entry's `enabled` flag
+- Booking URLs are defined in `booking-page-links.js` -> `bookingButtons` and `additionalCoverageLink`
+- Configuration, activation, and add-on URLs are defined in `booking-page-links.js` via `CONFIGURATION_URLS` and `ACTIVATION_URLS`
+- Updating links or office-hours sessions now only requires editing this repo; no Netlify function or Google Sheet sync is involved
 
 ## MSP-Aware Resource Links
 The page also reads `?msp=`, `?headless=`, `?package=`, `?hasConversion=`, and `?hasRetention=` from the URL and swaps the onboarding resource cards accordingly.
